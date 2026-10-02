@@ -9,14 +9,21 @@ try {
   if (Array.isArray(data)) saved = data;
 } catch { saved = []; }
 function values() {
-  const pairs = ids.map(id => [id, el(id).value.trim() === '' ? NaN : Number(el(id).value)]);
+  const pairs = ids.map(id => [id, el(id).disabled ? 0 : (el(id).value.trim() === '' ? NaN : Number(el(id).value))]);
   return Object.fromEntries([...pairs, ['channel', el('channel').value]]);
 }
 function refresh() {
   const channel = el('channel').value;
   for (const id of ['fixedFee','commission']) el(id).disabled = channel === 'tiktok';
   try {
-    const r = calculate(values());
+    const current = values();
+    if (ids.some(id => Number.isNaN(current[id]))) {
+      el('notice').textContent = 'Preencha os valores para calcular.';
+      for (const id of ['profit','margin','breakEven','suggested','fees','hundred']) el(id).textContent = '—';
+      el('feeDescription').textContent = '';
+      return;
+    }
+    const r = calculate(current);
     el('notice').textContent = '';
     el('profit').textContent = brl(r.profit);
     el('margin').textContent = pct(r.margin);
