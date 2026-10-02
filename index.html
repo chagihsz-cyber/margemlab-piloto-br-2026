@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MargemLab — decida pelo lucro</title>
+<meta name="description" content="Calcule o lucro, as taxas, o frete e o preço mínimo das vendas no Mercado Livre, Shopee, TikTok Shop, iFood e 99Food.">
 <style>
 :root{font-family:Inter,system-ui,-apple-system,sans-serif;color:#152b37;background:#f4f3ee}
 *{box-sizing:border-box}body{margin:0}header{background:#132b36;color:#f8f8f2;padding:26px max(5vw,18px)}
@@ -28,9 +29,10 @@ a{color:inherit}@media(max-width:800px){main{grid-template-columns:1fr}}@media(m
 <header><div class="eyebrow">Ferramenta gratuita · precificação</div>
 <h1>MargemLab<span style="color:#ffd17f">.</span></h1><p>Venda por um preço que faz sentido. Simule custos, taxas e margem antes de investir em estoque.</p></header>
 <main>
-<section class="panel"><h2>Monte seu cenário</h2><p class="hint">Valores em reais. Informe custos reais e confirme as tarifas na plataforma antes de publicar.</p>
+<section class="panel"><h2>Monte seu cenário</h2><p class="hint">Valores em reais. Preencha os custos e digite 0 quando não se aplicarem. Taxa de pagamento e mensalidade são opcionais; confirme as tarifas do seu contrato.</p>
 <form id="simulator" class="fields">
-<div class="full"><label for="channel">Canal de venda</label><select id="channel"><option value="meli">Mercado Livre (tarifas informadas por você)</option><option value="tiktok">TikTok Shop (tabela de referência)</option><option value="manual">Outro canal / personalizado</option></select></div>
+<div class="full"><label for="channel">Canal de venda</label><select id="channel"><option value="meli">Mercado Livre (tarifas informadas por você)</option><option value="tiktok">TikTok Shop (tabela de referência)</option><option value="shopee">Shopee (taxas conforme anúncio)</option><option value="ifood-basic">iFood · Plano Básico</option><option value="ifood-delivery">iFood · Plano Entrega</option><option value="99food-99">99Food · Entrega pela 99</option><option value="99food-own">99Food · Entrega própria</option><option value="manual">Outro canal / personalizado</option></select></div>
+<p class="hint full" id="channelHint" aria-live="polite">Selecione o canal e informe as tarifas do seu anúncio.</p>
 <div><label for="price">Preço de venda (R$)</label><input id="price" type="number" min="0" step=".01" required></div>
 <div><label for="productCost">Custo do produto (R$)</label><input id="productCost" type="number" min="0" step=".01" required></div>
 <div><label for="packaging">Embalagem (R$)</label><input id="packaging" type="number" min="0" step=".01" required></div>
@@ -38,6 +40,9 @@ a{color:inherit}@media(max-width:800px){main{grid-template-columns:1fr}}@media(m
 <div><label for="otherFixed">Outros custos por unidade (R$)</label><input id="otherFixed" type="number" min="0" step=".01" required></div>
 <div><label for="fixedFee">Tarifa fixa por unidade (R$)</label><input id="fixedFee" type="number" min="0" step=".01" required></div>
 <div><label for="commission">Comissão do canal (%)</label><input id="commission" type="number" min="0" max="99.99" step=".01" required></div>
+<div><label for="paymentFee">Taxa de pagamento online (%) · se houver</label><input id="paymentFee" type="number" min="0" max="99.99" step=".01" placeholder="Opcional"></div>
+<div><label for="monthlyFee">Mensalidade da plataforma (R$) · se houver</label><input id="monthlyFee" type="number" min="0" step=".01" placeholder="Opcional"></div>
+<div><label for="monthlyOrders">Número previsto de pedidos por mês</label><input id="monthlyOrders" type="number" min="1" step="1" placeholder="Se houver mensalidade"></div>
 <div><label for="taxes">Impostos estimados (%)</label><input id="taxes" type="number" min="0" max="99.99" step=".01" required></div>
 <div><label for="ads">Anúncios / outras taxas (%)</label><input id="ads" type="number" min="0" max="99.99" step=".01" required></div>
 <div><label for="targetMargin">Margem desejada (%)</label><input id="targetMargin" type="number" min="0" max="99.99" step=".01" required></div>
@@ -49,11 +54,12 @@ a{color:inherit}@media(max-width:800px){main{grid-template-columns:1fr}}@media(m
 <div class="kpi"><span>Margem sobre a venda</span><strong id="margin">—</strong></div>
 <div class="kpi"><span>Preço mínimo sem prejuízo</span><strong id="breakEven">—</strong></div>
 <div class="kpi"><span>Preço mínimo para margem desejada</span><strong id="suggested">—</strong></div>
-<div class="kpi"><span>Taxas variáveis estimadas</span><strong id="fees">—</strong><small id="feeDescription" class="hint"></small></div>
+<div class="kpi"><span>Comissão, processamento e taxas variáveis</span><strong id="fees">—</strong><small id="feeDescription" class="hint"></small></div>
+<div class="kpi"><span>Rateio da mensalidade por pedido</span><strong id="monthlyShare">—</strong></div>
 <div class="kpi"><span>Projeção para 100 unidades, mesmo preço e custos</span><strong id="hundred">—</strong></div></section>
 <section class="panel saved"><h2>Cenários salvos neste navegador</h2><div id="savedList"><small>Nenhum cenário salvo.</small></div></section>
 </main>
-<footer>Calculadora informativa: não consulta contas nem envia as simulações a servidor próprio. A tabela do TikTok Shop é referência de julho de 2026, sujeita a exceções. Confirme tarifas de frete, impostos e anúncio no canal real. <a href="https://seller-br.tiktok.com/university/essay?course_type=1&identity=1&knowledge_id=24428156307201&role=1" target="_blank" rel="noopener noreferrer">Fonte TikTok</a> · <a href="https://developers.mercadolivre.com.br/pt_br/descricao-de-produtos/comissao-por-vender" target="_blank" rel="noopener noreferrer">Fonte Mercado Livre</a>.</footer>
+<footer>Calculadora informativa: não consulta contas nem envia as simulações a servidor próprio. As tarifas dos planos exibidas são referências, sujeitas a contrato, localidade, promoção e forma de pagamento. Confirme tarifas de frete, impostos e anúncio no canal real. <a href="https://seller-br.tiktok.com/university/essay?course_type=1&identity=1&knowledge_id=24428156307201&role=1" target="_blank" rel="noopener noreferrer">Fonte TikTok</a> · <a href="https://developers.mercadolivre.com.br/pt_br/descricao-de-produtos/comissao-por-vender" target="_blank" rel="noopener noreferrer">Fonte Mercado Livre</a> · <a href="https://help.shopee.com.br/" target="_blank" rel="noopener noreferrer">Fonte Shopee</a> · <a href="https://parceiros.ifood.com.br/restaurante/planos-ifood" target="_blank" rel="noopener noreferrer">Fonte iFood</a> · <a href="https://99food.com/" target="_blank" rel="noopener noreferrer">Fonte 99Food</a>.</footer>
 <script type="module" src="./ui.mjs"></script>
 <p style="max-width:1180px;margin:20px auto;padding:0 18px"><a href="./privacidade.html">Privacidade e limites do simulador</a></p></body></html>
 
