@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MargemLab — decida pelo lucro</title>
+<style>
+:root{font-family:Inter,system-ui,-apple-system,sans-serif;color:#152b37;background:#f4f3ee}
+*{box-sizing:border-box}body{margin:0}header{background:#132b36;color:#f8f8f2;padding:26px max(5vw,18px)}
+header .eyebrow{color:#ffd17f;font-size:.75rem;font-weight:800;letter-spacing:.15em;text-transform:uppercase}
+h1{font-size:clamp(2rem,5vw,3.5rem);letter-spacing:-.055em;margin:8px 0}header p{max-width:620px;color:#d1dce0}
+main{max-width:1180px;margin:30px auto;padding:0 18px;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(290px,.9fr);gap:22px}
+.panel{background:white;border:1px solid #e3e1d9;border-radius:16px;padding:24px;box-shadow:0 4px 24px #152b3709}
+h2{font-size:1.18rem;letter-spacing:-.025em;margin:0 0 16px}p.hint,small{color:#5d6e77;font-size:.83rem;line-height:1.55}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:15px}.full{grid-column:1/-1}
+label{font-size:.83rem;font-weight:700;display:block;margin:0 0 6px}
+input,select{width:100%;border:1px solid #c8d1d3;background:#fcfcfa;color:#152b37;border-radius:9px;padding:11px;font:inherit;font-variant-numeric:tabular-nums}
+input:focus,select:focus{outline:2px solid #376e87;outline-offset:2px}
+.results{background:#132b36;color:white;border:0;align-self:start}.results .hint{color:#bdcfd5}
+.kpi{padding:17px 0;border-bottom:1px solid #3a5059}.kpi:last-child{border:0}
+.kpi span{display:block;color:#b5ccd3;font-size:.79rem;margin-bottom:4px}
+.kpi strong{font-size:clamp(1.7rem,3vw,2.3rem);letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.kpi.positive strong{color:#9befbf}.kpi.negative strong{color:#ffad9b}
+button{border:0;border-radius:9px;padding:12px 15px;font:inherit;font-weight:700;cursor:pointer;background:#ffd17f;color:#132b36}
+button.secondary{background:#e9eff1}button:focus-visible{outline:3px solid #376e87;outline-offset:2px}
+.actions{display:flex;gap:10px;flex-wrap:wrap}.actions button{flex:1}#notice{min-height:1.5em;color:#9b371d}
+.saved{grid-column:1/-1}.saved-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid #e6e8e7}
+.saved-item small{display:block}footer{max-width:1180px;margin:0 auto 25px;padding:0 18px;color:#576872;font-size:.78rem;line-height:1.6}
+a{color:inherit}@media(max-width:800px){main{grid-template-columns:1fr}}@media(max-width:460px){.fields{grid-template-columns:1fr}.full{grid-column:auto}.panel{padding:18px}}
+</style></head><body>
+<header><div class="eyebrow">Laboratório de monetização · Piloto 01</div>
+<h1>MargemLab<span style="color:#ffd17f">.</span></h1><p>Venda por um preço que faz sentido. Simule custos, taxas e margem antes de investir em estoque.</p></header>
+<main>
+<section class="panel"><h2>Monte seu cenário</h2><p class="hint">Valores em reais. Informe custos reais e confirme as tarifas na plataforma antes de publicar.</p>
+<form id="simulator" class="fields">
+<div class="full"><label for="channel">Canal de venda</label><select id="channel"><option value="meli">Mercado Livre (tarifas informadas por você)</option><option value="tiktok">TikTok Shop (tabela de referência)</option><option value="manual">Outro canal / personalizado</option></select></div>
+<div><label for="price">Preço de venda (R$)</label><input id="price" type="number" min="0" step=".01" value="79.90" required></div>
+<div><label for="productCost">Custo do produto (R$)</label><input id="productCost" type="number" min="0" step=".01" value="35" required></div>
+<div><label for="packaging">Embalagem (R$)</label><input id="packaging" type="number" min="0" step=".01" value="2" required></div>
+<div><label for="sellerShipping">Frete pago pelo vendedor (R$)</label><input id="sellerShipping" type="number" min="0" step=".01" value="7" required></div>
+<div><label for="otherFixed">Outros custos por unidade (R$)</label><input id="otherFixed" type="number" min="0" step=".01" value="0" required></div>
+<div><label for="fixedFee">Tarifa fixa por unidade (R$)</label><input id="fixedFee" type="number" min="0" step=".01" value="0" required></div>
+<div><label for="commission">Comissão do canal (%)</label><input id="commission" type="number" min="0" max="99.99" step=".01" value="13" required></div>
+<div><label for="taxes">Impostos estimados (%)</label><input id="taxes" type="number" min="0" max="99.99" step=".01" value="6" required></div>
+<div><label for="ads">Anúncios / outras taxas (%)</label><input id="ads" type="number" min="0" max="99.99" step=".01" value="0" required></div>
+<div><label for="targetMargin">Margem desejada (%)</label><input id="targetMargin" type="number" min="0" max="99.99" step=".01" value="20" required></div>
+<div class="full"><label for="scenarioName">Nome do cenário</label><input id="scenarioName" maxlength="80" value="Produto de teste" placeholder="Ex.: Kit organizador"></div>
+<div class="full actions"><button type="button" id="save">Salvar cenário</button><button type="button" class="secondary" id="export">Exportar CSV</button></div>
+</form><p id="notice" role="status" aria-live="polite"></p></section>
+<section class="panel results" aria-live="polite"><h2>Resultado por unidade</h2>
+<div class="kpi" id="profitCard"><span>Lucro estimado</span><strong id="profit">—</strong></div>
+<div class="kpi"><span>Margem sobre a venda</span><strong id="margin">—</strong></div>
+<div class="kpi"><span>Preço mínimo sem prejuízo</span><strong id="breakEven">—</strong></div>
+<div class="kpi"><span>Preço mínimo para margem desejada</span><strong id="suggested">—</strong></div>
+<div class="kpi"><span>Taxas variáveis estimadas</span><strong id="fees">—</strong><small id="feeDescription" class="hint"></small></div>
+<div class="kpi"><span>Projeção para 100 unidades, mesmo preço e custos</span><strong id="hundred">—</strong></div></section>
+<section class="panel saved"><h2>Cenários salvos neste navegador</h2><div id="savedList"><small>Nenhum cenário salvo.</small></div></section>
+</main>
+<footer>Protótipo independente: não consulta contas nem envia dados a servidor. A tabela do TikTok Shop é referência de julho de 2026, sujeita a exceções. Confirme tarifas de frete, impostos e anúncio no canal real. <a href="https://seller-br.tiktok.com/university/essay?course_type=1&identity=1&knowledge_id=24428156307201&role=1" target="_blank" rel="noopener noreferrer">Fonte TikTok</a> · <a href="https://developers.mercadolivre.com.br/pt_br/descricao-de-produtos/comissao-por-vender" target="_blank" rel="noopener noreferrer">Fonte Mercado Livre</a>.</footer>
+<script type="module" src="./ui.mjs"></script>
+<p style="max-width:1180px;margin:20px auto;padding:0 18px"><a href="./privacidade.html">Privacidade e limites do simulador</a></p></body></html>
+
